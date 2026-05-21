@@ -2,6 +2,9 @@
 /*
  * get_dashboard.php — Données du tableau de bord (mois en cours)
  */
+// Les avertissements PHP ne doivent pas corrompre la réponse JSON
+ini_set('display_errors', '0');
+
 require_once __DIR__ . '/../includes/functions.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -14,12 +17,13 @@ $user    = getCurrentUser();
 $isAdmin = isAdmin();
 $db      = getDB();
 
-$moisLabel = (new DateTime("$year-$month-01"))->formatLocale !== false
-    ? ucfirst((new DateTime("$year-$month-01"))->format('F Y'))
-    : $mois;
-
-setlocale(LC_TIME, 'fr_FR.UTF-8', 'fr_FR', 'French');
-$moisLabel = ucfirst(strftime('%B %Y', mktime(0, 0, 0, $month, 1, $year)));
+// Nom du mois en français sans strftime (déprécié PHP 8.1, supprimé PHP 8.2)
+$moisNoms  = [
+    1 => 'Janvier', 2 => 'Février',  3 => 'Mars',      4 => 'Avril',
+    5 => 'Mai',     6 => 'Juin',     7 => 'Juillet',   8 => 'Août',
+    9 => 'Septembre', 10 => 'Octobre', 11 => 'Novembre', 12 => 'Décembre',
+];
+$moisLabel = ($moisNoms[$month] ?? '') . ' ' . $year;
 
 if ($isAdmin) {
     // Saisies globales
@@ -84,6 +88,31 @@ if ($isAdmin) {
         ];
     }
 
+    // Répartition des actes par pilier (actions non calculées uniquement)
+    $piliersActes = [];
+    try {
+        $stmtPiliers = $db->prepare(
+            'SELECT p.id_pilier, p.Pilier,
+                    COALESCE(SUM(n.nombre), 0) AS total
+             FROM pilier p
+             LEFT JOIN action a
+                    ON a.id_pilier = p.id_pilier
+                   AND (a.formule IS NULL OR a.formule NOT LIKE \'=%\')
+             LEFT JOIN nombre n
+                    ON n.id_action = a.id_action
+                   AND YEAR(n.date) = ? AND MONTH(n.date) = ?
+             GROUP BY p.id_pilier, p.Pilier
+             ORDER BY p.id_pilier ASC'
+        );
+        $stmtPiliers->execute([$year, $month]);
+        $piliersActes = $stmtPiliers->fetchAll();
+        foreach ($piliersActes as &$pr) { $pr['total'] = (int)$pr['total']; }
+        unset($pr);
+    } catch (\Exception $e) {
+        // Silencieux : le camembert sera vide mais le reste du dashboard fonctionnera
+        $piliersActes = [];
+    }
+
     $totalPlans = (int)$planRow['total'];
     $acceptes   = (int)$planRow['acceptes'];
 
@@ -100,7 +129,8 @@ if ($isAdmin) {
             'total_devis'  => (int)$planRow['total_devis'],
             'total_montant'=> (int)$planRow['total_montant'],
         ],
-        'dentistes' => $dentistes,
+        'dentistes'    => $dentistes,
+        'piliers_actes'=> array_values($piliersActes),
     ]);
 
 } else {

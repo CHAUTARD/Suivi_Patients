@@ -1,6 +1,8 @@
 <?php
 // footer.php - Fermeture du layout + chargement des scripts JS
-// Variable optionnelle : $extraScripts (array de noms de fichiers dans assets/js/)
+// Variables optionnelles :
+//   $extraScripts (array) : noms de fichiers dans assets/js/
+//   $cdnScripts   (array) : URLs complètes chargées avant jQuery (ex. Chart.js CDN)
 ?>
 </main><!-- /container-fluid -->
 
@@ -14,6 +16,11 @@
     </div>
 </footer>
 
+<?php if (!empty($cdnScripts)): ?>
+    <?php foreach ($cdnScripts as $cdnSrc): ?>
+        <script src="<?= htmlspecialchars($cdnSrc) ?>"></script>
+    <?php endforeach; ?>
+<?php endif; ?>
 <script src="<?= SITE_ROOT ?>/assets/js/jquery.min.js"></script>
 <script src="<?= SITE_ROOT ?>/assets/js/bootstrap.bundle.min.js"></script>
 <script src="<?= SITE_ROOT ?>/assets/js/flatpickr.min.js"></script>

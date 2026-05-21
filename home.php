@@ -2,8 +2,9 @@
 require_once __DIR__ . '/includes/auth.php';
 requireLogin();
 
-$user      = getCurrentUser();
-$pageTitle = 'Tableau de bord';
+$user         = getCurrentUser();
+$pageTitle    = 'Tableau de bord';
+$extraScripts = ['home.js'];
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -145,68 +146,6 @@ require_once __DIR__ . '/includes/header.php';
 <script>
 window.SITE_ROOT = '<?= SITE_ROOT ?>';
 window.IS_ADMIN  = <?= isAdmin() ? 'true' : 'false' ?>;
-
-$(function () {
-    $.ajax({
-        url: window.SITE_ROOT + '/api/get_dashboard.php',
-        method: 'GET',
-        dataType: 'json'
-    }).done(function (d) {
-        if (!d.success) { showAlert(d.error || 'Erreur de chargement.', 'danger'); return; }
-
-        $('#dashSubtitle').text('Statistiques de ' + (d.mois_label || d.mois));
-
-        // KPIs
-        if (d.is_admin) {
-            $('#kpiJours').html('<span class="text-muted fs-5">—</span>');
-            $('#kpiDerniere').text(d.derniere_saisie ? 'Dernière : ' + frDate(d.derniere_saisie) : 'Aucune saisie');
-        } else {
-            $('#kpiJours').text(d.jours_saisis || 0);
-            $('#kpiDerniere').text(d.derniere_saisie ? 'Dernière : ' + frDate(d.derniere_saisie) : 'Aucune saisie ce mois');
-        }
-
-        var p = d.plans || {};
-        $('#kpiPlans').text(fmt(p.total || 0));
-        $('#kpiTaux').text((p.taux || 0) + ' %');
-        $('#kpiAcceptes').text((p.acceptes || 0) + ' / ' + (p.total || 0) + ' plans acceptés');
-        $('#kpiDevis').text(fmt(p.total_devis || 0) + ' €');
-        $('#kpiMontant').text('Accepté : ' + fmt(p.total_montant || 0) + ' €');
-
-        // Couleur taux
-        var taux = p.taux || 0;
-        var tauxEl = document.getElementById('kpiTaux');
-        tauxEl.className = 'h3 mb-0 fw-bold ' + (taux >= 80 ? 'text-success' : taux >= 50 ? 'text-warning' : 'text-danger');
-
-        // Tableau admin
-        if (window.IS_ADMIN && d.dentistes && d.dentistes.length > 0) {
-            $('#adminMoisLabel').text(d.mois_label || d.mois);
-            var html = '';
-            d.dentistes.forEach(function (r) {
-                var tauxColor = r.taux >= 80 ? 'text-success' : r.taux >= 50 ? 'text-warning' : 'text-danger';
-                html += '<tr>';
-                html += '<td class="fw-semibold">' + escH(r.login) + '</td>';
-                html += '<td class="text-center">' + (r.jours_saisis || 0) + '</td>';
-                html += '<td class="text-center text-muted small">' + (r.derniere_saisie ? frDate(r.derniere_saisie) : '—') + '</td>';
-                html += '<td class="text-end">' + fmt(r.total_plans) + '</td>';
-                html += '<td class="text-end">' + fmt(r.total_acceptes) + '</td>';
-                html += '<td class="text-end fw-semibold ' + tauxColor + '">' + r.taux + ' %</td>';
-                html += '<td class="text-end">' + fmt(r.total_devis) + ' €</td>';
-                html += '</tr>';
-            });
-            $('#adminTableBody').html(html);
-            $('#adminZone').show();
-        }
-    }).fail(function () {
-        showAlert('Erreur réseau lors du chargement du tableau de bord.', 'danger');
-    });
-
-    function frDate(iso) {
-        if (!iso || iso.length < 10) return '';
-        return iso.substring(8, 10) + '/' + iso.substring(5, 7) + '/' + iso.substring(0, 4);
-    }
-    function fmt(v) { return (parseInt(v, 10) || 0).toLocaleString('fr-FR'); }
-    function escH(s) { return $('<div>').text(s || '').html(); }
-});
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

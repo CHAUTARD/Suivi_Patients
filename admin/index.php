@@ -21,7 +21,9 @@ $nbSaisiesTotal = $db->query(
     "SELECT COUNT(*) FROM nombre"
 )->fetchColumn();
 
-$pageTitle = 'Administration';
+$pageTitle    = 'Administration';
+$cdnScripts   = [SITE_ROOT . '/assets/js/chart.umd.min.js'];
+$extraScripts = ['admin_dashboard.js'];
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -124,5 +126,25 @@ require_once __DIR__ . '/../includes/header.php';
         </a>
     </div>
 </div>
+
+<!-- Camembert répartition par pilier -->
+<div class="row g-3 mt-2">
+    <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-light">
+                <h5 class="h6 mb-0 fw-bold text-primary">
+                    <i class="bi bi-pie-chart-fill me-2"></i>Répartition par pilier — <span id="chartMoisLabel">…</span>
+                </h5>
+            </div>
+            <div class="card-body d-flex flex-column align-items-center justify-content-center" id="chartBody">
+                <div class="spinner-border spinner-border-sm text-muted" role="status"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.SITE_ROOT = '<?= SITE_ROOT ?>';
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
