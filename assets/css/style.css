@@ -1,0 +1,175 @@
+/* ============================================================
+   SELARL La Vespalienne — Suivi des Actes
+   Feuille de style principale
+   ============================================================ */
+
+/* ---- Variables ---- */
+:root {
+    --primary:       #1a6fc4;
+    --primary-dark:  #145ba0;
+    --accent:        #e8f0fb;
+    --pilier-bg:     #d0e4f7;
+    --montant-color: #198754;
+    --footer-height: 56px;
+}
+
+/* ---- Général ---- */
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: #f4f6fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* ---- Page de connexion ---- */
+.login-page {
+    background: linear-gradient(135deg, #1a6fc4 0%, #0d3f73 100%);
+}
+
+.login-page .card {
+    border-radius: 1rem;
+}
+
+.login-logo span {
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+/* ---- Navbar ---- */
+.navbar-brand {
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+}
+
+/* ---- Cards ---- */
+.card {
+    border-radius: 0.75rem;
+}
+
+.card-hover {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+}
+
+.card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12) !important;
+}
+
+/* ---- Tableau de saisie ---- */
+.pilier-row td {
+    background-color: var(--pilier-bg) !important;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--primary-dark);
+    padding: 0.4rem 0.75rem;
+}
+
+.saisie-input {
+    max-width: 160px;
+    text-align: right;
+}
+
+.saisie-input.is-montant {
+    border-color: var(--montant-color);
+    color: var(--montant-color);
+    font-weight: 600;
+}
+
+/* ---- Tableau récapitulatif ---- */
+#recapTableZone table {
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+
+#recapTableZone td.total-col {
+    background-color: #fff8e1;
+    font-weight: 700;
+    color: #7c5c00;
+}
+
+#recapTableZone td.montant-val {
+    color: var(--montant-color);
+    font-weight: 600;
+}
+
+#recapTableZone td.zero-val {
+    color: #ced4da;
+}
+
+#recapTableZone .pilier-sep td {
+    background-color: var(--pilier-bg) !important;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary-dark);
+    padding: 0.3rem 0.75rem;
+}
+
+/* ---- Toast notifications ---- */
+#toastContainer {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 1100;
+    min-width: 280px;
+}
+
+/* ---- Badge rôle ---- */
+.badge-dentiste {
+    background-color: var(--primary);
+}
+
+/* ---- Admin dashboard ---- */
+.display-6 {
+    font-size: 2.5rem;
+}
+
+/* ---- Saisie non enregistrée ---- */
+.btn-unsaved {
+    animation: pulse-unsaved 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse-unsaved {
+    0%   { box-shadow: 0 0 0 0   rgba(25, 135, 84, 0.55); }
+    60%  { box-shadow: 0 0 0 8px rgba(25, 135, 84, 0); }
+    100% { box-shadow: 0 0 0 0   rgba(25, 135, 84, 0); }
+}
+
+/* ---- Lignes de saisie modifiées ---- */
+.row-modified td {
+    background-color: #fffbea !important;
+}
+
+.row-modified .saisie-input {
+    border-color: #ffc107;
+    background-color: #fffdf0;
+}
+
+/* ---- Modales déplaçables ---- */
+.modal-header {
+    cursor: move;
+    user-select: none;
+}
+
+/* ---- Footer ---- */
+.footer {
+    flex-shrink: 0;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 576px) {
+    .saisie-input {
+        max-width: 100%;
+    }
+    .navbar-brand {
+        font-size: 0.95rem;
+    }
+}
