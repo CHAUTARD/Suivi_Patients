@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # SELARL La Vespalienne — Suivi des Actes
 
 Application web de suivi des actes dentaires : saisie quotidienne, récapitulatifs mensuels, plans de traitement et tableau de bord.
@@ -298,7 +297,3 @@ Propriétaire — SELARL La Vespalienne © 2026
 ---
 
 *Dernière mise à jour : Mai 2026*
-=======
-# Suivi_Patients
-Suivi des plans de traitement des patients patients
->>>>>>> 3162afc53328e7c1691a51225f4286fc1f51138b
