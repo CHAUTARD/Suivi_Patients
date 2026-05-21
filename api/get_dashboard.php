@@ -45,18 +45,35 @@ if ($isAdmin) {
     $stmt->execute([$year, $month]);
     $planRow = $stmt->fetch();
 
-    // Comparatif par dentiste
+    // Seuil d'alerte : aujourd'hui − 5 jours ouvrables (lun–ven)
+    $seuil = new DateTime();
+    $joursOuvrables = 0;
+    while ($joursOuvrables < 5) {
+        $seuil->modify('-1 day');
+        if ((int)$seuil->format('N') <= 5) { // 1=Lun … 5=Ven
+            $joursOuvrables++;
+        }
+    }
+    $seuilStr = $seuil->format('Y-m-d');
+
+    // Comparatif par dentiste (+ derniere_globale toutes périodes confondues)
     $stmt = $db->prepare(
         'SELECT u.login,
-                COUNT(DISTINCT n.date)  AS jours_saisis,
-                MAX(n.date)             AS derniere_saisie,
-                COALESCE(pt.total_plans,    0) AS total_plans,
-                COALESCE(pt.total_acceptes, 0) AS total_acceptes,
-                COALESCE(pt.total_devis,    0) AS total_devis
+                COUNT(DISTINCT n.date)          AS jours_saisis,
+                MAX(n.date)                     AS derniere_saisie,
+                MAX(ns.derniere_globale)        AS derniere_globale,
+                COALESCE(pt.total_plans,    0)  AS total_plans,
+                COALESCE(pt.total_acceptes, 0)  AS total_acceptes,
+                COALESCE(pt.total_devis,    0)  AS total_devis
          FROM utilisateur u
          LEFT JOIN nombre n
                 ON n.id_utilisateur = u.id_utilisateur
                AND YEAR(n.date) = ? AND MONTH(n.date) = ?
+         LEFT JOIN (
+             SELECT id_utilisateur, MAX(date) AS derniere_globale
+             FROM nombre
+             GROUP BY id_utilisateur
+         ) ns ON ns.id_utilisateur = u.id_utilisateur
          LEFT JOIN (
              SELECT id_utilisateur,
                     COUNT(*) AS total_plans,
@@ -75,16 +92,18 @@ if ($isAdmin) {
 
     $dentistes = [];
     foreach ($dentistesRows as $d) {
-        $total = (int)$d['total_plans'];
-        $acc   = (int)$d['total_acceptes'];
+        $total          = (int)$d['total_plans'];
+        $acc            = (int)$d['total_acceptes'];
+        $derniereGlob   = $d['derniere_globale'];
         $dentistes[] = [
-            'login'           => $d['login'],
-            'jours_saisis'    => (int)$d['jours_saisis'],
-            'derniere_saisie' => $d['derniere_saisie'],
-            'total_plans'     => $total,
-            'total_acceptes'  => $acc,
-            'taux'            => $total > 0 ? round($acc / $total * 100, 1) : 0,
-            'total_devis'     => (int)$d['total_devis'],
+            'login'            => $d['login'],
+            'jours_saisis'     => (int)$d['jours_saisis'],
+            'derniere_saisie'  => $d['derniere_saisie'],
+            'total_plans'      => $total,
+            'total_acceptes'   => $acc,
+            'taux'             => $total > 0 ? round($acc / $total * 100, 1) : 0,
+            'total_devis'      => (int)$d['total_devis'],
+            'en_retard'        => ($derniereGlob === null || $derniereGlob < $seuilStr),
         ];
     }
 
@@ -129,8 +148,9 @@ if ($isAdmin) {
             'total_devis'  => (int)$planRow['total_devis'],
             'total_montant'=> (int)$planRow['total_montant'],
         ],
-        'dentistes'    => $dentistes,
-        'piliers_actes'=> array_values($piliersActes),
+        'dentistes'      => $dentistes,
+        'seuil_retard'   => $seuilStr,
+        'piliers_actes'  => array_values($piliersActes),
     ]);
 
 } else {

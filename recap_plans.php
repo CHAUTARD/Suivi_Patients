@@ -22,12 +22,13 @@ if (isAdmin()) {
 
 $pageTitle    = 'Récap mensuel des plans';
 $extraScripts = ['recap_plans.js'];
-$currentMois  = date('Y-m');
+// Pré-sélection du mois via ?mois= (deep-link depuis la relance admin)
+$currentMois  = validateMois($_GET['mois'] ?? date('Y-m')) ?? date('Y-m');
 
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="row mb-3 align-items-center">
+<div class="row mb-2 align-items-center">
     <div class="col-12 col-md-auto">
         <h2 class="h4 mb-0 fw-bold text-primary">
             <i class="bi bi-clipboard2-data me-2"></i>Récap mensuel des plans de traitement
@@ -56,11 +57,97 @@ require_once __DIR__ . '/includes/header.php';
     <?php endif; ?>
 
     <div class="col-12 col-md-auto mt-2 mt-md-0">
+        <button type="button" id="btnToggleFilters"
+                class="btn btn-outline-secondary btn-sm"
+                data-bs-toggle="collapse"
+                data-bs-target="#filtresAvancesZone"
+                aria-expanded="false"
+                aria-controls="filtresAvancesZone">
+            <i class="bi bi-funnel me-1"></i>Filtres avancés
+            <span id="filtresActiveBadge" class="badge bg-danger ms-1" style="display:none;">0</span>
+        </button>
+    </div>
+
+    <div class="col-12 col-md-auto mt-2 mt-md-0">
         <button id="btnExportPlansCsv" class="btn btn-outline-success btn-sm">
-            <i class="bi bi-filetype-csv me-1"></i> Exporter CSV
+            <i class="bi bi-filetype-csv me-1"></i>Exporter CSV
         </button>
     </div>
 </div>
+
+<!-- Panneau filtres avancés -->
+<div class="collapse mb-3" id="filtresAvancesZone">
+    <div class="card border-0 shadow-sm bg-light">
+        <div class="card-body py-3 px-3">
+            <div class="row g-3 align-items-end">
+
+                <!-- Recherche patient -->
+                <div class="col-12 col-md-4 col-lg-3">
+                    <label for="filtrePatient" class="form-label small fw-semibold mb-1">
+                        <i class="bi bi-search me-1"></i>Recherche patient
+                    </label>
+                    <input type="text" id="filtrePatient" class="form-control form-control-sm"
+                           placeholder="Nom du patient…" autocomplete="off">
+                </div>
+
+                <!-- Statut -->
+                <div class="col-12 col-md-auto">
+                    <div class="form-label small fw-semibold mb-1">
+                        <i class="bi bi-check-circle me-1"></i>Statut
+                    </div>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Filtre statut">
+                        <input type="radio" class="btn-check" name="filtreStatut" id="fsAll"    value="" checked>
+                        <label class="btn btn-outline-secondary" for="fsAll">Tous</label>
+
+                        <input type="radio" class="btn-check" name="filtreStatut" id="fsOui"    value="Oui">
+                        <label class="btn btn-outline-success"  for="fsOui">
+                            <i class="bi bi-check-lg me-1"></i>Acceptés
+                        </label>
+
+                        <input type="radio" class="btn-check" name="filtreStatut" id="fsPartie" value="en Partie">
+                        <label class="btn btn-outline-warning"  for="fsPartie">
+                            <i class="bi bi-dash-lg me-1"></i>En partie
+                        </label>
+
+                        <input type="radio" class="btn-check" name="filtreStatut" id="fsNon"    value="Non">
+                        <label class="btn btn-outline-danger"   for="fsNon">
+                            <i class="bi bi-x-lg me-1"></i>Non
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Montant devis min -->
+                <div class="col-6 col-sm-auto">
+                    <label for="filtreDevisMin" class="form-label small fw-semibold mb-1">
+                        <i class="bi bi-cash me-1"></i>Devis min&nbsp;(€)
+                    </label>
+                    <input type="number" id="filtreDevisMin" class="form-control form-control-sm"
+                           placeholder="0" min="0" style="width:110px;">
+                </div>
+
+                <!-- Montant devis max -->
+                <div class="col-6 col-sm-auto">
+                    <label for="filtreDevisMax" class="form-label small fw-semibold mb-1">
+                        Devis max&nbsp;(€)
+                    </label>
+                    <input type="number" id="filtreDevisMax" class="form-control form-control-sm"
+                           placeholder="∞" min="0" style="width:110px;">
+                </div>
+
+                <!-- Réinitialiser -->
+                <div class="col-auto ms-auto">
+                    <button type="button" id="btnResetFilters" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-x-circle me-1"></i>Réinitialiser
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Résultat filtre actif -->
+<div id="filtreResultat" class="mb-2 small" style="display:none;"></div>
 
 <div id="alertZone" class="mb-3" style="display:none;"></div>
 

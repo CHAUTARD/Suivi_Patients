@@ -24,13 +24,13 @@ $(function () {
         if (d.is_admin) {
             $('#kpiJours').html('<span class="text-muted fs-5">—</span>');
             $('#kpiDerniere').text(
-                d.derniere_saisie ? 'Dernière : ' + frDate(d.derniere_saisie) : 'Aucune saisie'
+                d.derniere_saisie ? 'Dernière date : ' + frDate(d.derniere_saisie) : 'Aucune saisie'
             );
         } else {
             $('#kpiJours').text(d.jours_saisis || 0);
             $('#kpiDerniere').text(
                 d.derniere_saisie
-                    ? 'Dernière : ' + frDate(d.derniere_saisie)
+                    ? 'Dernière date : ' + frDate(d.derniere_saisie)
                     : 'Aucune saisie ce mois'
             );
         }
