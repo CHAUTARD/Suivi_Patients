@@ -8,6 +8,9 @@
     <div class="container-fluid text-center text-muted small">
         <?= htmlspecialchars(APP_NAME) ?> &mdash; <?= htmlspecialchars(APP_SUBTITLE) ?>
         &copy; <?= date('Y') ?>
+        <span class="mx-2">&bull;</span>
+        Développé par Patrick CH.
+        <span class="ms-2 text-muted opacity-75">v<?= htmlspecialchars(APP_VERSION) ?></span>
     </div>
 </footer>
 

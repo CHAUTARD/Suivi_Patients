@@ -174,16 +174,43 @@ if ($isAdminUser) {
     )->fetchAll();
 }
 
+// Périodes de fermeture du cabinet qui chevauchent ce mois
+$joursFermeture = [];
+try {
+    $firstDay = sprintf('%04d-%02d-01',      $year, $month);
+    $lastDay  = sprintf('%04d-%02d-%02d',    $year, $month, $nbJours);
+    $stmtFerm = $db->prepare(
+        'SELECT date_debut, date_fin, motif
+         FROM fermeture
+         WHERE date_debut <= :lastDay AND date_fin >= :firstDay'
+    );
+    $stmtFerm->execute([':firstDay' => $firstDay, ':lastDay' => $lastDay]);
+    foreach ($stmtFerm->fetchAll() as $ferm) {
+        $dDebut = new DateTime($ferm['date_debut']);
+        $dFin   = new DateTime($ferm['date_fin']);
+        foreach ($jours as $j) {
+            $dJour = new DateTime("$year-$month-$j");
+            if ($dJour >= $dDebut && $dJour <= $dFin) {
+                // On stocke le motif (ou true si aucun motif) pour le tooltip JS
+                $joursFermeture[$j] = $ferm['motif'] ?: true;
+            }
+        }
+    }
+} catch (\Exception $e) {
+    // Table absente (migration non exécutée) — on continue sans fermetures
+}
+
 jsonResponse([
-    'success'      => true,
-    'mois'         => $mois,
-    'year'         => $year,
-    'month'        => $month,
-    'nbJours'      => $nbJours,
-    'jours'        => $jours,
-    'joursInfo'    => $joursInfo,
-    'joursFerier'  => $joursFerier,
-    'piliers'      => array_values($piliers),
-    'dentistes'    => $dentistes,
-    'selectedUser' => $filtreId,
+    'success'         => true,
+    'mois'            => $mois,
+    'year'            => $year,
+    'month'           => $month,
+    'nbJours'         => $nbJours,
+    'jours'           => $jours,
+    'joursInfo'       => $joursInfo,
+    'joursFerier'     => $joursFerier,
+    'joursFermeture'  => $joursFermeture,
+    'piliers'         => array_values($piliers),
+    'dentistes'       => $dentistes,
+    'selectedUser'    => $filtreId,
 ]);

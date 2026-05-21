@@ -103,6 +103,42 @@ main {
     color: #ced4da;
 }
 
+/* ---- Fermetures cabinet (recap) ---- */
+#recapTableZone th.recap-fermeture,
+#recapTableZone .sticky-top th.recap-fermeture {
+    background-color: #adb5bd !important;
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent            0px,
+        transparent            4px,
+        rgba(0, 0, 0, 0.18)   4px,
+        rgba(0, 0, 0, 0.18)   8px
+    ) !important;
+    color: #212529;
+}
+
+#recapTableZone td.recap-fermeture {
+    background-color: #dee2e6 !important;
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent            0px,
+        transparent            4px,
+        rgba(0, 0, 0, 0.10)   4px,
+        rgba(0, 0, 0, 0.10)   8px
+    ) !important;
+}
+
+/* ---- Jours fériés (recap) ---- */
+#recapTableZone th.recap-ferie,
+#recapTableZone .sticky-top th.recap-ferie {
+    background-color: #b8d9f8 !important;
+    color: #0a4a80;
+}
+
+#recapTableZone td.recap-ferie {
+    background-color: #e3f2fd !important;
+}
+
 #recapTableZone .pilier-sep td {
     background-color: var(--pilier-bg) !important;
     font-weight: 700;

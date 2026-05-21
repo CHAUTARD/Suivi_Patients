@@ -87,10 +87,11 @@ $(function () {
             return;
         }
 
-        const jours   = data.jours;
-        const nbJours = data.nbJours;
-        const joursInfo = data.joursInfo || {}; // Récupérer les abréviations des jours
-        const joursFerier = data.joursFerier || {}; // Récupérer les jours fériés
+        const jours          = data.jours;
+        const nbJours        = data.nbJours;
+        const joursInfo      = data.joursInfo     || {}; // Abréviations des jours
+        const joursFerier    = data.joursFerier   || {}; // Jours fériés
+        const joursFermeture = data.joursFermeture || {}; // Fermetures cabinet
 
         // Nom du mois en français
         const moisLabel = formatMoisLabel(data.year, data.month);
@@ -104,8 +105,14 @@ $(function () {
             const jourAbbr = joursInfo[j] || ''; // Récupérer l'abrégé (Lu, Ma, etc.)
             const isWeekend = (jourAbbr === 'Sa' || jourAbbr === 'Di'); // Vérifier si samedi ou dimanche
             const isHoliday = joursFerier[j] ? true : false; // Vérifier si jour férié
-            const bgClass = (isWeekend || isHoliday) ? ' bg-secondary' : '';
-            html += '<th class="text-center px-1' + bgClass + '" style="min-width:36px;">'
+            const fermetureMotif = joursFermeture[j];
+            const bgClass = fermetureMotif
+                ? ' recap-fermeture'
+                : (isHoliday ? ' recap-ferie' : (isWeekend ? ' bg-secondary' : ''));
+            const thTitle = fermetureMotif && fermetureMotif !== true
+                ? ' title="Fermé : ' + fermetureMotif + '"'
+                : (fermetureMotif ? ' title="Fermeture cabinet"' : '');
+            html += '<th class="text-center px-1' + bgClass + '"' + thTitle + ' style="min-width:36px;">'
                 + '<div>' + j + '</div>'
                 + '<div style="font-size:0.75rem; font-weight:normal;">' + jourAbbr + '</div>'
                 + '</th>';
@@ -135,10 +142,13 @@ $(function () {
                     const v    = action.valeurs[j] || 0;
                     const zero = (v === 0);
                     const jourAbbr = joursInfo[j] || '';
-                    const isWeekend = (jourAbbr === 'Sa' || jourAbbr === 'Di');
-                    const isHoliday = joursFerier[j] ? true : false;
-                    let cls    = zero ? ' zero-val' : '';
-                    cls       += (isWeekend || isHoliday) ? ' bg-secondary bg-opacity-10' : '';
+                    const isWeekend      = (jourAbbr === 'Sa' || jourAbbr === 'Di');
+                    const isHoliday      = joursFerier[j]    ? true : false;
+                    const isFermeture    = joursFermeture[j] ? true : false;
+                    let cls = zero ? ' zero-val' : '';
+                    cls += isFermeture ? ' recap-fermeture'
+                         : (isHoliday  ? ' recap-ferie'
+                         : (isWeekend  ? ' bg-secondary bg-opacity-10' : ''));
                     html += '<td class="text-end px-1' + cls + '">'
                         + (zero ? '<span class="text-muted">–</span>' : formatValeur(v))
                         + '</td>';

@@ -31,10 +31,16 @@ require_once __DIR__ . '/includes/header.php';
         </h2>
     </div>
     <div class="col-12 col-md-auto mt-2 mt-md-0">
-        <div class="input-group" style="max-width:200px;">
+        <div class="input-group" style="max-width:280px;">
+            <button type="button" id="btnPrevDay" class="btn btn-outline-secondary" title="Jour précédent">
+                <i class="bi bi-chevron-left"></i>
+            </button>
             <span class="input-group-text bg-white"><i class="bi bi-calendar3"></i></span>
             <input type="text" id="dateSaisie" class="form-control fw-semibold"
                    value="<?= htmlspecialchars($today) ?>" placeholder="JJ/MM/AAAA" readonly>
+            <button type="button" id="btnNextDay" class="btn btn-outline-secondary" title="Jour suivant" disabled>
+                <i class="bi bi-chevron-right"></i>
+            </button>
         </div>
     </div>
     <?php if (isAdmin()): ?>

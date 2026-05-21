@@ -23,22 +23,36 @@ $(function () {
         defaultDate: window.INIT_DATE || new Date(),
         onChange: function (dates, dateStr) {
             const id = getSelectedUserId();
-            if (window.IS_ADMIN && id === 0) { return; }
             loadSaisie(dateStr, id);
-            loadPlans(dateStr, id);
+            if (!window.IS_ADMIN || id > 0) {
+                loadPlans(dateStr, id);
+            }
+            updateNavButtons(dateStr);
         }
     });
 
     /* ---- Bouton "Aujourd'hui" ---- */
     $('#btnToday').on('click', function () {
-        fp.setDate(new Date(), true);
+        const todayStr = fp.formatDate(new Date(), 'Y-m-d');
+        fp.setDate(todayStr, false);
+        const id = getSelectedUserId();
+        loadSaisie(todayStr, id);
+        if (!window.IS_ADMIN || id > 0) {
+            loadPlans(todayStr, id);
+        }
+        updateNavButtons(todayStr);
     });
+
+    /* ---- Boutons navigation jour ---- */
+    $('#btnPrevDay').on('click', function () { navigateDay(-1); });
+    $('#btnNextDay').on('click', function () { navigateDay(+1); });
 
     /* ---- Chargement initial ---- */
     const initDate = window.INIT_DATE || fp.formatDate(new Date(), 'Y-m-d');
 
     if (window.IS_ADMIN) {
-        showAdminPlaceholder();
+        loadSaisie(initDate, 0); // Vue consolidée par défaut
+        showPlanPlaceholder();
     } else {
         loadSaisie(initDate);
         loadPlans(initDate);
@@ -47,12 +61,12 @@ $(function () {
     /* ---- Sélection du dentiste (admin) ---- */
     $('#filtreDentiste').on('change', function () {
         const id = getSelectedUserId();
+        const d  = fp.formatDate(fp.selectedDates[0], 'Y-m-d');
+        loadSaisie(d, id);
         if (id > 0) {
-            const d = fp.formatDate(fp.selectedDates[0], 'Y-m-d');
-            loadSaisie(d, id);
             loadPlans(d, id);
         } else {
-            showAdminPlaceholder();
+            showPlanPlaceholder();
         }
     });
 
@@ -167,20 +181,39 @@ $(function () {
        Fonctions utilitaires admin
        ================================================================ */
 
+    function navigateDay(delta) {
+        const current = fp.selectedDates[0] ? new Date(fp.selectedDates[0]) : new Date();
+        const next = new Date(current);
+        next.setDate(next.getDate() + delta);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (next > today) { return; } // Respecter maxDate
+
+        const nextStr = fp.formatDate(next, 'Y-m-d');
+        fp.setDate(nextStr, false);
+        const id = getSelectedUserId();
+        loadSaisie(nextStr, id);
+        if (!window.IS_ADMIN || id > 0) {
+            loadPlans(nextStr, id);
+        }
+        updateNavButtons(nextStr);
+    }
+
+    function updateNavButtons(dateStr) {
+        const todayStr = fp.formatDate(new Date(), 'Y-m-d');
+        $('#btnNextDay').prop('disabled', dateStr >= todayStr);
+    }
+
     function getSelectedUserId() {
         if (!window.IS_ADMIN) { return 0; }
         return parseInt($('#filtreDentiste').val() || '0', 10);
     }
 
-    function showAdminPlaceholder() {
-        $('#saisieBody').html(
-            '<tr><td colspan="3" class="text-center py-4 text-muted">'
-            + '<i class="bi bi-person-circle me-2"></i>Sélectionnez un dentiste pour afficher les données.'
-            + '</td></tr>'
-        );
+    function showPlanPlaceholder() {
         $('#plansBody').html(
             '<tr><td colspan="6" class="text-center py-4 text-muted">'
-            + '<i class="bi bi-person-circle me-2"></i>Sélectionnez un dentiste pour afficher les données.'
+            + '<i class="bi bi-person-circle me-2"></i>Sélectionnez un dentiste pour afficher les plans du jour.'
             + '</td></tr>'
         );
     }
@@ -199,7 +232,7 @@ $(function () {
         originalValues = {};
 
         const params = { date: date };
-        if (window.IS_ADMIN && idUser) { params.id_utilisateur = idUser; }
+        if (window.IS_ADMIN) { params.id_utilisateur = idUser || 0; }
 
         $.ajax({
             url:      window.SITE_ROOT + '/api/get_saisie.php',
@@ -218,6 +251,22 @@ $(function () {
                 });
                 renderTable(resp.piliers);
                 setDirty('actes', false);
+
+                // Mode consolidé : lecture seule
+                if (resp.consolidated) {
+                    $('#tableSaisie .saisie-input').prop('disabled', true);
+                    if (!$('#consolidatedBanner').length) {
+                        $('#alertZone').after(
+                            '<div id="consolidatedBanner" class="alert alert-info py-2 mb-3">'
+                            + '<i class="bi bi-people-fill me-2"></i>'
+                            + '<strong>Vue consolidée</strong> — total de l\'ensemble des dentistes. '
+                            + 'Sélectionnez un dentiste pour modifier les données.'
+                            + '</div>'
+                        );
+                    }
+                } else {
+                    $('#consolidatedBanner').remove();
+                }
             } else {
                 showAlert('Erreur lors du chargement des données.', 'danger');
                 $('#saisieBody').html('<tr><td colspan="3" class="text-center text-muted py-3">Erreur de chargement.</td></tr>');

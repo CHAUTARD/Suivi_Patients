@@ -110,6 +110,19 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </a>
     </div>
+    <div class="col-12 col-md-4">
+        <a href="<?= SITE_ROOT ?>/admin/fermetures.php" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100 card-hover">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="fs-1 text-danger"><i class="bi bi-calendar-x"></i></div>
+                    <div>
+                        <div class="fw-bold">Fermetures</div>
+                        <div class="text-muted small">Gérer les périodes de fermeture du cabinet</div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
 </div>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

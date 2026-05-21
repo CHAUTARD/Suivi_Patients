@@ -20,31 +20,55 @@ if ($date === null) {
 $user = getCurrentUser();
 $db   = getDB();
 
+$consolidated = false;
+
 if (isAdmin() && isset($_GET['id_utilisateur'])) {
     $targetId = (int)$_GET['id_utilisateur'];
-    $chk = $db->prepare('SELECT id_utilisateur FROM utilisateur WHERE id_utilisateur = ? AND id_role = 1');
-    $chk->execute([$targetId]);
-    if (!$chk->fetch()) {
-        jsonError(400, 'Dentiste invalide.');
+    if ($targetId === 0) {
+        // Vue consolidée : total de tous les dentistes
+        $consolidated = true;
+        $uid = 0;
+    } else {
+        $chk = $db->prepare('SELECT id_utilisateur FROM utilisateur WHERE id_utilisateur = ? AND id_role = 1');
+        $chk->execute([$targetId]);
+        if (!$chk->fetch()) {
+            jsonError(400, 'Dentiste invalide.');
+        }
+        $uid = $targetId;
     }
-    $uid = $targetId;
 } else {
     $uid = $user['id'];
 }
 
-$stmt = $db->prepare(
-    'SELECT a.id_action, a.action, a.formule,
-            p.id_pilier, p.Pilier,
-            COALESCE(n.nombre, 0) AS nombre
-     FROM action a
-     JOIN pilier p ON a.id_pilier = p.id_pilier
-     LEFT JOIN nombre n
-            ON n.id_action      = a.id_action
-           AND n.id_utilisateur = :uid
-           AND n.date           = :date
-     ORDER BY p.id_pilier ASC, a.ord ASC'
-);
-$stmt->execute([':uid' => $uid, ':date' => $date]);
+if ($consolidated) {
+    $stmt = $db->prepare(
+        'SELECT a.id_action, a.action, a.formule,
+                p.id_pilier, p.Pilier,
+                COALESCE(SUM(n.nombre), 0) AS nombre
+         FROM action a
+         JOIN pilier p ON a.id_pilier = p.id_pilier
+         LEFT JOIN nombre n
+                ON n.id_action = a.id_action
+               AND n.date      = :date
+         GROUP BY a.id_action, a.action, a.formule, p.id_pilier, p.Pilier
+         ORDER BY p.id_pilier ASC, a.ord ASC'
+    );
+    $stmt->execute([':date' => $date]);
+} else {
+    $stmt = $db->prepare(
+        'SELECT a.id_action, a.action, a.formule,
+                p.id_pilier, p.Pilier,
+                COALESCE(n.nombre, 0) AS nombre
+         FROM action a
+         JOIN pilier p ON a.id_pilier = p.id_pilier
+         LEFT JOIN nombre n
+                ON n.id_action      = a.id_action
+               AND n.id_utilisateur = :uid
+               AND n.date           = :date
+         ORDER BY p.id_pilier ASC, a.ord ASC'
+    );
+    $stmt->execute([':uid' => $uid, ':date' => $date]);
+}
 $rows = $stmt->fetchAll();
 
 // Grouper par pilier
@@ -67,7 +91,8 @@ foreach ($rows as $row) {
 }
 
 jsonResponse([
-    'success' => true,
-    'date'    => $date,
-    'piliers' => array_values($piliers),
+    'success'      => true,
+    'date'         => $date,
+    'consolidated' => $consolidated,
+    'piliers'      => array_values($piliers),
 ]);
